@@ -59,6 +59,7 @@ class FlameGraph extends Component {
           loading: false,
           chart: null,
           searchTerm: '',
+          virtualRoot: '',
         };
     }
 
@@ -87,11 +88,16 @@ class FlameGraph extends Component {
                 this.drawFlamegraph()
             })
             .then( () => {
-                const query = queryString.parse(this.props.location.search);
-                const sq = query["search"];
+                const query = queryString.parse(this.props.location.search)
+                const sq = query["search"]
                 if (sq) {
-                    this.setState({searchTerm: sq});
-                    this.state.chart.search(sq);
+                    this.setState({searchTerm: sq})
+                    this.state.chart.search(sq)
+                }
+
+                const zq = query["zoom"]
+                if (zq) {
+                    this.setState({virtualRoot: zq})
                 }
             })
 
@@ -103,7 +109,7 @@ class FlameGraph extends Component {
         this.props.popBreadcrumb('f_heatmap_' + filename)
     }
 
-    componentWillReceiveProps(nextProps) {
+    UNSAFE_componentWillReceiveProps(nextProps) {
         if (nextProps.location.search !== this.props.location.search) {
             const query = queryString.parse(nextProps.location.search);
             const sq = query['search'];
@@ -128,6 +134,7 @@ class FlameGraph extends Component {
             .transitionDuration(750)
             .sort(true)
             .title('')
+            .onClick(d => {this.updateZoomQuery(d.id)})
 
         var details = document.getElementById("details")
         chart.details(details)
@@ -169,6 +176,16 @@ class FlameGraph extends Component {
             params.set('search', nextQuery);
         }
         this.props.history.push({search: params.toString(),});
+    }
+
+    updateZoomQuery(nextQuery) {
+        const params = new URLSearchParams(this.props.location.search)
+        if (nextQuery === '') {
+            params.delete('zoom')
+        } else {
+            params.set('zoom', nextQuery)
+        }
+        this.props.history.push({search: params.toString(),})
     }
 
     render() {
